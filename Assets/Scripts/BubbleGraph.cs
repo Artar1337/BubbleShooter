@@ -20,6 +20,22 @@ public enum BubbleColor
 /// </summary>
 public class BubbleGraph : MonoBehaviour
 {
+    #region Singleton
+    public static BubbleGraph instance;
+
+    private void Awake()
+    {
+        if (instance != null)
+        {
+            Debug.LogError("Bubble root instance error!");
+            return;
+        }
+        instance = this;
+    }
+    #endregion
+
+    private const float UPDATERTIMER = 0.5f;
+
     [SerializeField] private int maxGraphDepth = 15;
     [SerializeField] private int initialGraphDepth = 7;
     /// <summary>
@@ -38,12 +54,41 @@ public class BubbleGraph : MonoBehaviour
     private int countLeftToGenerate;
     private int generatedLines = 0;
     private bool isNextLineOdd = false;
+    private bool shouldUpdateBubblesNow = true;
+    private List<Bubble[]> bubbles;
     
     private void Start()
     {
+        bubbles = new List<Bubble[]>();
         countLeftToGenerate = maxGraphDepth - initialGraphDepth;
         RandomizeLevel();
-        InvokeRepeating(nameof(RandomizeOneLine), 1f, 1f);
+        //InvokeRepeating(nameof(RandomizeOneLine), 1f, 1f);
+    }
+
+    public void UpdateAllListeners()
+    {
+        //return;
+        if (!shouldUpdateBubblesNow)
+        {
+            return;
+        }
+
+        shouldUpdateBubblesNow = false;
+        foreach(Bubble[] b in bubbles)
+        {
+            if (b[0] == null) 
+            { 
+                continue;
+            }
+            b[0].TryGetSomeNeighbors();
+        }
+        StartCoroutine(UpdateRevoke());
+    }
+
+    private IEnumerator UpdateRevoke()
+    {
+        yield return new WaitForSeconds(UPDATERTIMER);
+        shouldUpdateBubblesNow = true;
     }
 
     /// <summary>
@@ -57,7 +102,7 @@ public class BubbleGraph : MonoBehaviour
         }
         countLeftToGenerate--;
         generatedLines++;
-        // Сдвигаем сначала все пузыри, потом уже билдим сверху
+        // Сдвигаем сначала вниз все пузыри, потом уже билдим сверху
         transform.position -= new Vector3(0, verticalBubbleGap, 0);
         if (isNextLineOdd)
         {
@@ -99,6 +144,7 @@ public class BubbleGraph : MonoBehaviour
                 Quaternion.identity, transform).AddComponent(typeof(Bubble)) as Bubble;
             bubble.Initialize(j, yIndex);
             bubble.GetComponent<SpriteRenderer>().color = bubbleColors[bubble.Color];
+            bubbles.Add(new Bubble[3] { bubble, null, null });
         }
     }
 
@@ -115,6 +161,7 @@ public class BubbleGraph : MonoBehaviour
                 Quaternion.identity, transform).AddComponent(typeof(Bubble)) as Bubble;
             bubble.Initialize(j, yIndex);
             bubble.GetComponent<SpriteRenderer>().color = bubbleColors[bubble.Color];
+            bubbles.Add(new Bubble[3] { bubble, null, null });
         }
     }
 }
