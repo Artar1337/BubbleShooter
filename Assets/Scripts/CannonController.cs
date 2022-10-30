@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Контроллер для пушки, отвечает за стрельбу, поворот
+/// </summary>
 public class CannonController : MonoBehaviour
 {
     private const string MOUSEAXIS = "Fire1";
