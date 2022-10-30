@@ -58,6 +58,12 @@ public class BubbleGraph : MonoBehaviour
     private bool isNextLineOdd = false;
     private bool shouldUpdateBubblesNow = true;
     private List<Bubble> bubbles;
+
+    public GameObject BubblePrefab 
+    {
+        get => bubblePrefab;
+        private set => bubblePrefab = value;
+    }
     
     private void Start()
     {
@@ -66,33 +72,6 @@ public class BubbleGraph : MonoBehaviour
         countLeftToGenerate = maxGraphDepth - initialGraphDepth;
         RandomizeLevel();
         //InvokeRepeating(nameof(RandomizeOneLine), 1f, 1f);
-    }
-
-    private void PhysicsIgnoreInitialize()
-    {
-        Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer(CHECKPOINTLAYER), LayerMask.NameToLayer(BALLLAYER));
-    }
-
-    /// <summary>
-    /// Используется для просчета возможности уничтожения висящих в воздухе шаров
-    /// </summary>
-    public void UpdateAllListeners()
-    {
-        if (!shouldUpdateBubblesNow)
-        {
-            return;
-        }
-
-        shouldUpdateBubblesNow = false;
-        foreach(Bubble b in bubbles)
-        {
-            if (b == null) 
-            { 
-                continue;
-            }
-            b.TryGetSomeNeighbors();
-        }
-        StartCoroutine(UpdateRevoke());
     }
 
     /// <summary>
@@ -156,9 +135,7 @@ public class BubbleGraph : MonoBehaviour
             Bubble bubble = Instantiate(bubblePrefab, transform.position +
                 new Vector3(horizontalBubbleGap * j, -verticalBubbleGap * yIndex, 0f),
                 Quaternion.identity, transform).GetComponent<Bubble>();
-            bubble.Initialize();
-            bubble.GetComponent<SpriteRenderer>().color = bubbleColors[bubble.Color];
-            bubbles.Add(bubble);
+            bubble.Initialize(false, Vector2.zero);
         }
     }
 
@@ -173,9 +150,47 @@ public class BubbleGraph : MonoBehaviour
             Bubble bubble = Instantiate(bubblePrefab, transform.position +
                 new Vector3(horizontalBubbleGap / 2 + horizontalBubbleGap * j, -verticalBubbleGap * yIndex, 0f),
                 Quaternion.identity, transform).GetComponent<Bubble>();
-            bubble.Initialize();
-            bubble.GetComponent<SpriteRenderer>().color = bubbleColors[bubble.Color];
-            bubbles.Add(bubble);
+            bubble.Initialize(false, Vector2.zero);
         }
+    }
+    
+    /// <summary>
+    /// Изначальный игнор коллизий снаряда и чекпоинтов
+    /// </summary>
+    private void PhysicsIgnoreInitialize()
+    {
+        Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer(CHECKPOINTLAYER), LayerMask.NameToLayer(BALLLAYER));
+    }
+
+    /// <summary>
+    /// Используется для просчета возможности уничтожения висящих в воздухе шаров
+    /// </summary>
+    public void UpdateAllListeners()
+    {
+        if (!shouldUpdateBubblesNow)
+        {
+            return;
+        }
+
+        shouldUpdateBubblesNow = false;
+        foreach(Bubble b in bubbles)
+        {
+            if (b == null) 
+            { 
+                continue;
+            }
+            b.TryGetSomeNeighbors();
+        }
+        StartCoroutine(UpdateRevoke());
+    }
+
+    /// <summary>
+    /// Добавляет пузырь в список и красит его в нужный цвет
+    /// </summary>
+    /// <param name="bubble">Пузырь для добавления</param>
+    public void AddAndColorBubble(Bubble bubble)
+    {
+        bubble.GetComponent<SpriteRenderer>().color = bubbleColors[bubble.Color];
+        bubbles.Add(bubble);
     }
 }

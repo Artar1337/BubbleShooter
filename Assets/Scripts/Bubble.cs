@@ -10,13 +10,18 @@ public class Bubble: MonoBehaviour
 {
     private const float DETECTIONRADIUS = 3f;
     private const float TIMETOLIVE = 0.3f;
+    private const string BOUNCYWALLLAYER = "BouncyWall";
+    private const string BALLLAYER = "Ball";
 
     [SerializeField] private BubbleCheckpoint[] checkpoints;
+    [SerializeField] private float speed = 100f;
 
     private BubbleColor bubbleColor;
     private new CircleCollider2D collider;
     private float defaultRadius;
     private bool hadSomeCollisions = false;
+    private Vector2 direction;
+    private new Rigidbody2D rigidbody;
 
     /// <summary>
     /// Нормализованный цвет (начинается с нуля)
@@ -32,10 +37,30 @@ public class Bubble: MonoBehaviour
         set => hadSomeCollisions = value;
     }
 
-    private void Start()
+    private void Awake()
     {
         collider = GetComponent<CircleCollider2D>();
         defaultRadius = collider.radius;
+        rigidbody = GetComponent<Rigidbody2D>();
+    }
+
+    /// <summary>
+    /// Отражение пузырька при попадании в стену
+    /// </summary>
+    /// <param name="collision">Коллайдер, с которым столкнулись</param>
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.layer == LayerMask.NameToLayer(BOUNCYWALLLAYER))
+        {
+            direction = Vector2.Reflect(direction, collision.GetContact(0).normal);
+            if (rigidbody == null)
+            {
+                return;
+            }
+            rigidbody.velocity = Vector2.zero;
+            rigidbody.angularVelocity = 0;
+            rigidbody.AddForce(direction * speed, ForceMode2D.Force);
+        }
     }
 
     /// <summary>
@@ -44,6 +69,20 @@ public class Bubble: MonoBehaviour
     /// <param name="collision">Коллизия</param>
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        // Первый раз попали в триггер другого шарика
+        if (!collider.isTrigger)
+        {
+            collider.isTrigger = true;
+            rigidbody.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
+            rigidbody.velocity = Vector2.zero;
+            rigidbody.angularVelocity = 0;
+            gameObject.layer = LayerMask.NameToLayer(bubbleColor.ToString());
+            foreach (BubbleCheckpoint bubbleCheckpoint in checkpoints)
+            {
+                bubbleCheckpoint.Simulated = true;
+            }
+        }
+
         hadSomeCollisions = true;
         if(collision.gameObject.layer != gameObject.layer)
         {
@@ -90,12 +129,12 @@ public class Bubble: MonoBehaviour
     }
 
     /// <summary>
-    /// Инициализация параметров пузыря
+    /// Инициализация параметров пузыря, запуск с определенной скоростью, если это снаряд
     /// </summary>
     /// <param name="xIndex">Индекс колонки пузыря</param>
     /// <param name="yIndex">Индекс строки пузыря</param>
     /// <param name="color">Цвет пузыря</param>
-    public void Initialize(BubbleColor color = BubbleColor.None)
+    public void Initialize(bool isProjectile, Vector2 projectileDirection, BubbleColor color = BubbleColor.None)
     {
         bubbleColor = color;
         if(bubbleColor == BubbleColor.None)
@@ -103,6 +142,19 @@ public class Bubble: MonoBehaviour
             bubbleColor = (BubbleColor)Random.Range(1, System.Enum.GetNames(typeof(BubbleColor)).Length);
         }
         gameObject.layer = LayerMask.NameToLayer(bubbleColor.ToString());
+        if (isProjectile)
+        {
+            rigidbody.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+            collider.isTrigger = false;
+            foreach(BubbleCheckpoint bubbleCheckpoint in checkpoints)
+            {
+                bubbleCheckpoint.Simulated = false;
+            }
+            direction = projectileDirection;
+            rigidbody.AddForce(direction * speed, ForceMode2D.Force);
+            gameObject.layer = LayerMask.NameToLayer(BALLLAYER);
+        }
+        BubbleGraph.instance.AddAndColorBubble(this);
     }
 
     /// <summary>

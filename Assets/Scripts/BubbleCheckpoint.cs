@@ -5,24 +5,33 @@
 /// </summary>
 public class BubbleCheckpoint : MonoBehaviour
 {
-    public int overlaps = 0;
+    private int overlaps = 0;
+    private new Rigidbody2D rigidbody;
 
     /// <summary>
     /// Пересекается ли коллайдер с чем-нибудь
     /// </summary>
     public bool IsOverlapping
     {
-        get
-        {
-            return overlaps > 0;
-        }
+        get => overlaps > 0;
+    }
+
+    public bool Simulated
+    {
+        get => rigidbody.simulated;
+        set => rigidbody.simulated = value;
+    }
+
+    private void Awake()
+    {
+        rigidbody = GetComponent<Rigidbody2D>();
     }
 
     /// <summary>
     /// Увеличивает число пересечений с объектами на 1 (кроме объектов того же слоя)
     /// </summary>
     /// <param name="other">Коллайдер, в который вошли</param>
-    void OnTriggerEnter2D(Collider2D other)
+    private void OnTriggerEnter2D(Collider2D other)
     {
         if(other.gameObject.layer == gameObject.layer)
         {
@@ -35,7 +44,7 @@ public class BubbleCheckpoint : MonoBehaviour
     /// Уменьшает число пересечений с объектами на 1 (кроме объектов того же слоя)
     /// </summary>
     /// <param name="other">Коллайдер, из которого вышли</param>
-    void OnTriggerExit2D(Collider2D other)
+    private void OnTriggerExit2D(Collider2D other)
     {
         if (other.gameObject.layer == gameObject.layer)
         {
