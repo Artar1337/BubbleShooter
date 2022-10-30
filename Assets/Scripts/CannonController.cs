@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Контроллер для пушки, отвечает за стрельбу, поворот
+/// Контроллер для пушки, отвечает за стрельбу, поворот, отрисовку линии
 /// </summary>
 public class CannonController : MonoBehaviour
 {
@@ -16,6 +16,12 @@ public class CannonController : MonoBehaviour
     [SerializeField] private Transform bubbleSpawnPoint;
 
     private bool cannonIsMoving = false;
+    private LineRenderer lineRenderer;
+
+    private void Start()
+    {
+        lineRenderer = GetComponent<LineRenderer>();
+    }
 
     /// <summary>
     /// Отвечает за INPUT, поворот пушки, выстрел и т.п.
@@ -29,6 +35,7 @@ public class CannonController : MonoBehaviour
             Touch touch = Input.GetTouch(0);
             Debug.Log("Touch Position : " + touch.position);
             cannonIsMoving = true;
+            LineRendererUpdate();
             return;
         }
         // Для ПК
@@ -40,14 +47,16 @@ public class CannonController : MonoBehaviour
             transform.rotation = Quaternion.Euler(0f, 0f,
                 Mathf.Clamp(Mathf.Atan2(diff.y, diff.x) * Mathf.Rad2Deg - DEG90, -degreeBorder, degreeBorder));
             cannonIsMoving = true;
+            LineRendererUpdate();
             return;
         }
         if (cannonIsMoving)
         {
             cannonIsMoving = false;
             Shoot();
+            transform.rotation = Quaternion.identity;
+            LineRendererUpdate();
         }
-        transform.rotation = Quaternion.identity;
     }
 
     /// <summary>
@@ -58,5 +67,16 @@ public class CannonController : MonoBehaviour
         Bubble bubble = Instantiate(BubbleGraph.instance.BubblePrefab, bubbleSpawnPoint.position, Quaternion.identity, bubbleSpawnRoot).
             GetComponent<Bubble>();
         bubble.Initialize(true, transform.rotation * Vector2.up);
+    }
+
+    /// <summary>
+    /// Обновление визуального положения линии-траектории
+    /// </summary>
+    private void LineRendererUpdate()
+    {
+        lineRenderer.SetPositions(new Vector3[] { 
+            lineRenderer.GetPosition(0),
+            bubbleSpawnPoint.position
+        });
     }
 }

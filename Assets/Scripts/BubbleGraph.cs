@@ -35,6 +35,7 @@ public class BubbleGraph : MonoBehaviour
     #endregion
 
     private const float UPDATERTIMER = 0.5f;
+    
     private const string CHECKPOINTLAYER = "Checkpoint";
     private const string BALLLAYER = "Ball";
 
@@ -52,12 +53,14 @@ public class BubbleGraph : MonoBehaviour
     /// Массив с цветами для окраски пузырей (желательно логическое соответствие типу BubbleColor, кроме None)
     /// </summary>
     [SerializeField] private Color[] bubbleColors;
+    [SerializeField] private float forceUpdateTimer = 0.25f;
 
     private int countLeftToGenerate;
     private int generatedLines = 0;
     private bool isNextLineOdd = false;
     private bool shouldUpdateBubblesNow = true;
     private List<Bubble> bubbles;
+    private int currentId = 0;
 
     public GameObject BubblePrefab 
     {
@@ -71,7 +74,7 @@ public class BubbleGraph : MonoBehaviour
         bubbles = new List<Bubble>();
         countLeftToGenerate = maxGraphDepth - initialGraphDepth;
         RandomizeLevel();
-        //InvokeRepeating(nameof(RandomizeOneLine), 1f, 1f);
+        InvokeRepeating(nameof(ForceUpdateAllListeners), forceUpdateTimer, forceUpdateTimer);
     }
 
     /// <summary>
@@ -171,7 +174,6 @@ public class BubbleGraph : MonoBehaviour
         {
             return;
         }
-
         shouldUpdateBubblesNow = false;
         foreach(Bubble b in bubbles)
         {
@@ -185,6 +187,25 @@ public class BubbleGraph : MonoBehaviour
     }
 
     /// <summary>
+    /// Принудительное обновление шариков 
+    /// (вызывается по таймеру как фикс от зависших в воздухе для каждого шара, кроме шаров со слоем Ball)
+    /// </summary>
+    private void ForceUpdateAllListeners()
+    {
+        foreach (Bubble b in bubbles)
+        {
+            if (b == null)
+            {
+                continue;
+            }
+            if(b.gameObject.layer != LayerMask.NameToLayer(BALLLAYER))
+            {
+                b.ForceGetSomeNeighbors();
+            }
+        }
+    }
+
+    /// <summary>
     /// Добавляет пузырь в список и красит его в нужный цвет
     /// </summary>
     /// <param name="bubble">Пузырь для добавления</param>
@@ -192,5 +213,10 @@ public class BubbleGraph : MonoBehaviour
     {
         bubble.GetComponent<SpriteRenderer>().color = bubbleColors[bubble.Color];
         bubbles.Add(bubble);
+    }
+
+    public int GetNextId()
+    {
+        return currentId++;
     }
 }

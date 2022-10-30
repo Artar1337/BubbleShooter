@@ -5,7 +5,8 @@
 /// </summary>
 public class BubbleCheckpoint : MonoBehaviour
 {
-    private int overlaps = 0;
+    // Впихнул в serialize, чтобы отслеживать кол-во пересечений в инспекторе
+    [SerializeField] private int overlaps = 0;
     private new Rigidbody2D rigidbody;
 
     /// <summary>

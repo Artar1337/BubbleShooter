@@ -2,9 +2,26 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Контроллер анимации Stickman-а в углу экрана
+/// </summary>
 [RequireComponent(typeof(SpriteRenderer))]
 public class StickmanController : MonoBehaviour
 {
+    #region Singleton
+    public static StickmanController instance;
+
+    private void Awake()
+    {
+        if (instance != null)
+        {
+            Debug.LogError("Stickman instance error!");
+            return;
+        }
+        instance = this;
+    }
+    #endregion
+
     private const string BLINKTRIGGER = "Blink";
     private const string HAPPYTRIGGER = "Happy";
     private const string SADTRIGGER = "Sad";

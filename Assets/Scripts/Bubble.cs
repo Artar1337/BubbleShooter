@@ -10,6 +10,7 @@ public class Bubble: MonoBehaviour
 {
     private const float DETECTIONRADIUS = 3f;
     private const float TIMETOLIVE = 0.3f;
+    private const float TIMETOLIVEAFTERDISABLE = 3f;
     private const string BOUNCYWALLLAYER = "BouncyWall";
     private const string BALLLAYER = "Ball";
 
@@ -22,6 +23,7 @@ public class Bubble: MonoBehaviour
     private bool hadSomeCollisions = false;
     private Vector2 direction;
     private new Rigidbody2D rigidbody;
+    private int id;
 
     /// <summary>
     /// Нормализованный цвет (начинается с нуля)
@@ -42,6 +44,7 @@ public class Bubble: MonoBehaviour
         collider = GetComponent<CircleCollider2D>();
         defaultRadius = collider.radius;
         rigidbody = GetComponent<Rigidbody2D>();
+        id = BubbleGraph.instance.GetNextId();
     }
 
     /// <summary>
@@ -100,7 +103,7 @@ public class Bubble: MonoBehaviour
     {
         yield return new WaitForSeconds(TIMETOLIVE);
         BubbleGraph.instance.UpdateAllListeners();
-        Destroy(gameObject);
+        DestroyBall();
     }
 
     /// <summary>
@@ -120,12 +123,35 @@ public class Bubble: MonoBehaviour
                 break;
             }
         }
-        Debug.LogWarning(hadSomeCollisions);
         if (!hadSomeCollisions)
         {
-            Destroy(gameObject);
+            DestroyBall();
         }
         hadSomeCollisions = false;
+    }
+
+    /// <summary>
+    /// Делает объект подверженным гравитации, после чего уничтожает через некоторое время
+    /// </summary>
+    private void DestroyBall()
+    {
+        StickmanController.instance.MakeStickmanHappy();
+        foreach (BubbleCheckpoint bubbleCheckpoint in checkpoints)
+        {
+            bubbleCheckpoint.Simulated = false;
+        }
+        collider.enabled = false;
+        rigidbody.gravityScale = 1f;
+        StartCoroutine(DestroyCoroutine());
+    }
+
+    /// <summary>
+    /// Уничтожает объект после TIMETOLIVEAFTERDISABLE секунд
+    /// </summary>
+    private IEnumerator DestroyCoroutine()
+    {
+        yield return new WaitForSeconds(TIMETOLIVEAFTERDISABLE);
+        Destroy(gameObject);
     }
 
     /// <summary>
@@ -166,6 +192,14 @@ public class Bubble: MonoBehaviour
         {
             return;
         }
+        StartCoroutine(NeighborCheck());
+    }
+
+    /// <summary>
+    /// Принудительное выяснение наличия соседей у пузырька
+    /// </summary>
+    public void ForceGetSomeNeighbors()
+    {
         StartCoroutine(NeighborCheck());
     }
 }
