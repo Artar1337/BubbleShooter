@@ -22,9 +22,9 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
-  - 
+  - StickyWall
+  - Ball
+  - Checkpoint
   - Blue
   - Yellow
   - Green

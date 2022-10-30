@@ -2,23 +2,34 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Базовый класс пузыря, отвечает за просчёты коллизий
+/// </summary>
 [RequireComponent(typeof(CircleCollider2D))]
 public class Bubble: MonoBehaviour
 {
     private const float DETECTIONRADIUS = 3f;
     private const float TIMETOLIVE = 0.3f;
 
+    [SerializeField] private BubbleCheckpoint[] checkpoints;
+
     private BubbleColor bubbleColor;
     private new CircleCollider2D collider;
     private float defaultRadius;
-    public bool hadSomeCollisions = false;
-    
-    private int xIndex = 0;
-    private int yIndex = 0;
+    private bool hadSomeCollisions = false;
 
+    /// <summary>
+    /// Нормализованный цвет (начинается с нуля)
+    /// </summary>
     public int Color
     {
         get => (int)bubbleColor - 1;
+    }
+
+    public bool HadSomeCollisions 
+    {
+        get => hadSomeCollisions;
+        set => hadSomeCollisions = value;
     }
 
     private void Start()
@@ -59,12 +70,22 @@ public class Bubble: MonoBehaviour
     /// <returns>Ждет FixedUpdate</returns>
     private IEnumerator NeighborCheck()
     {
+        hadSomeCollisions = false;
+        // Ждем, чтобы убедиться, что объекты уже уничтожены
         yield return new WaitForSeconds(TIMETOLIVE);
+        foreach(BubbleCheckpoint checkpoint in checkpoints)
+        {
+            if (checkpoint.IsOverlapping)
+            {
+                hadSomeCollisions = true;
+                break;
+            }
+        }
+        Debug.LogWarning(hadSomeCollisions);
         if (!hadSomeCollisions)
         {
             Destroy(gameObject);
         }
-        collider.radius = defaultRadius;
         hadSomeCollisions = false;
     }
 
@@ -74,10 +95,8 @@ public class Bubble: MonoBehaviour
     /// <param name="xIndex">Индекс колонки пузыря</param>
     /// <param name="yIndex">Индекс строки пузыря</param>
     /// <param name="color">Цвет пузыря</param>
-    public void Initialize(int xIndex, int yIndex, BubbleColor color = BubbleColor.None)
+    public void Initialize(BubbleColor color = BubbleColor.None)
     {
-        this.xIndex = xIndex;
-        this.yIndex = yIndex;
         bubbleColor = color;
         if(bubbleColor == BubbleColor.None)
         {
@@ -95,8 +114,6 @@ public class Bubble: MonoBehaviour
         {
             return;
         }
-        hadSomeCollisions = false;
-        collider.radius = DETECTIONRADIUS;
         StartCoroutine(NeighborCheck());
     }
 }

@@ -7,7 +7,7 @@ using UnityEngine;
 /// </summary>
 public enum BubbleColor
 {
-    // none - выбирается рандомный цвет
+    // none - выбирается рандомный цвет в Initialize в классе Bubble
     None = 0,
     Green = 1,
     Red = 2,
@@ -35,6 +35,8 @@ public class BubbleGraph : MonoBehaviour
     #endregion
 
     private const float UPDATERTIMER = 0.5f;
+    private const string CHECKPOINTLAYER = "Checkpoint";
+    private const string BALLLAYER = "Ball";
 
     [SerializeField] private int maxGraphDepth = 15;
     [SerializeField] private int initialGraphDepth = 7;
@@ -55,36 +57,48 @@ public class BubbleGraph : MonoBehaviour
     private int generatedLines = 0;
     private bool isNextLineOdd = false;
     private bool shouldUpdateBubblesNow = true;
-    private List<Bubble[]> bubbles;
+    private List<Bubble> bubbles;
     
     private void Start()
     {
-        bubbles = new List<Bubble[]>();
+        PhysicsIgnoreInitialize();
+        bubbles = new List<Bubble>();
         countLeftToGenerate = maxGraphDepth - initialGraphDepth;
         RandomizeLevel();
         //InvokeRepeating(nameof(RandomizeOneLine), 1f, 1f);
     }
 
+    private void PhysicsIgnoreInitialize()
+    {
+        Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer(CHECKPOINTLAYER), LayerMask.NameToLayer(BALLLAYER));
+    }
+
+    /// <summary>
+    /// Используется для просчета возможности уничтожения висящих в воздухе шаров
+    /// </summary>
     public void UpdateAllListeners()
     {
-        //return;
         if (!shouldUpdateBubblesNow)
         {
             return;
         }
 
         shouldUpdateBubblesNow = false;
-        foreach(Bubble[] b in bubbles)
+        foreach(Bubble b in bubbles)
         {
-            if (b[0] == null) 
+            if (b == null) 
             { 
                 continue;
             }
-            b[0].TryGetSomeNeighbors();
+            b.TryGetSomeNeighbors();
         }
         StartCoroutine(UpdateRevoke());
     }
 
+    /// <summary>
+    /// Используется для того, чтобы нельзя было вызвать UpdateAllListeners несколько раз подряд
+    /// </summary>
+    /// <returns></returns>
     private IEnumerator UpdateRevoke()
     {
         yield return new WaitForSeconds(UPDATERTIMER);
@@ -141,10 +155,10 @@ public class BubbleGraph : MonoBehaviour
         {
             Bubble bubble = Instantiate(bubblePrefab, transform.position +
                 new Vector3(horizontalBubbleGap * j, -verticalBubbleGap * yIndex, 0f),
-                Quaternion.identity, transform).AddComponent(typeof(Bubble)) as Bubble;
-            bubble.Initialize(j, yIndex);
+                Quaternion.identity, transform).GetComponent<Bubble>();
+            bubble.Initialize();
             bubble.GetComponent<SpriteRenderer>().color = bubbleColors[bubble.Color];
-            bubbles.Add(new Bubble[3] { bubble, null, null });
+            bubbles.Add(bubble);
         }
     }
 
@@ -158,10 +172,10 @@ public class BubbleGraph : MonoBehaviour
         {
             Bubble bubble = Instantiate(bubblePrefab, transform.position +
                 new Vector3(horizontalBubbleGap / 2 + horizontalBubbleGap * j, -verticalBubbleGap * yIndex, 0f),
-                Quaternion.identity, transform).AddComponent(typeof(Bubble)) as Bubble;
-            bubble.Initialize(j, yIndex);
+                Quaternion.identity, transform).GetComponent<Bubble>();
+            bubble.Initialize();
             bubble.GetComponent<SpriteRenderer>().color = bubbleColors[bubble.Color];
-            bubbles.Add(new Bubble[3] { bubble, null, null });
+            bubbles.Add(bubble);
         }
     }
 }
