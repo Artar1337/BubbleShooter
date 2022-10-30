@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// Контроллер для пушки, отвечает за стрельбу, поворот, отрисовку линии
@@ -14,13 +15,20 @@ public class CannonController : MonoBehaviour
     [SerializeField] private float degreeBorder = 60f;
     [SerializeField] private Transform bubbleSpawnRoot;
     [SerializeField] private Transform bubbleSpawnPoint;
+    [SerializeField] private Image currentBall;
+    [SerializeField] private Image nextBall;
 
     private bool cannonIsMoving = false;
     private LineRenderer lineRenderer;
+    private BubbleColor currentColor;
+    private BubbleColor nextColor;
 
     private void Start()
     {
         lineRenderer = GetComponent<LineRenderer>();
+        currentColor = GenerateColor();
+        nextColor = GenerateColor();
+        UpdateUI();
     }
 
     /// <summary>
@@ -60,13 +68,31 @@ public class CannonController : MonoBehaviour
     }
 
     /// <summary>
+    /// Генерирует случайный цвет из BubbleColor
+    /// </summary>
+    /// <returns>Случайный цвет из BubbleColor</returns>
+    private BubbleColor GenerateColor()
+    {
+        return (BubbleColor)Random.Range(1, System.Enum.GetNames(typeof(BubbleColor)).Length);
+    }
+
+    /// <summary>
     /// Стреляет пузырьком - пушечным шаром в текущем направлении поворота пушки
     /// </summary>
     private void Shoot()
     {
         Bubble bubble = Instantiate(BubbleGraph.instance.BubblePrefab, bubbleSpawnPoint.position, Quaternion.identity, bubbleSpawnRoot).
             GetComponent<Bubble>();
-        bubble.Initialize(true, transform.rotation * Vector2.up);
+        bubble.Initialize(true, transform.rotation * Vector2.up, currentColor);
+        currentColor = nextColor;
+        nextColor = GenerateColor();
+        UpdateUI();
+    }
+
+    private void UpdateUI()
+    {
+        currentBall.color = BubbleGraph.instance.GetColorByEnum(currentColor);
+        nextBall.color = BubbleGraph.instance.GetColorByEnum(nextColor);
     }
 
     /// <summary>

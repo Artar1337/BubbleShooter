@@ -38,6 +38,7 @@ public class BubbleGraph : MonoBehaviour
     
     private const string CHECKPOINTLAYER = "Checkpoint";
     private const string BALLLAYER = "Ball";
+    private const string BOUNCYWALLLAYER = "BouncyWall";
 
     [SerializeField] private int maxGraphDepth = 15;
     [SerializeField] private int initialGraphDepth = 7;
@@ -163,6 +164,8 @@ public class BubbleGraph : MonoBehaviour
     private void PhysicsIgnoreInitialize()
     {
         Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer(CHECKPOINTLAYER), LayerMask.NameToLayer(BALLLAYER));
+        Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer(BALLLAYER), LayerMask.NameToLayer(BALLLAYER));
+        Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer(CHECKPOINTLAYER), LayerMask.NameToLayer(BOUNCYWALLLAYER));
     }
 
     /// <summary>
@@ -184,6 +187,20 @@ public class BubbleGraph : MonoBehaviour
             b.TryGetSomeNeighbors();
         }
         StartCoroutine(UpdateRevoke());
+    }
+
+    /// <summary>
+    /// Возвращает цвет по его enum
+    /// </summary>
+    /// <param name="color">Цвет в enum</param>
+    /// <returns>Цвет в Color (ARGB)</returns>
+    public Color GetColorByEnum(BubbleColor color)
+    {
+        if (color == BubbleColor.None)
+        {
+            return Color.white;
+        }
+        return bubbleColors[(int)color - 1];
     }
 
     /// <summary>

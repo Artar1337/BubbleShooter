@@ -12,6 +12,8 @@ public class Bubble: MonoBehaviour
     private const float TIMETOLIVE = 0.3f;
     private const float TIMETOLIVEAFTERDISABLE = 3f;
     private const string BOUNCYWALLLAYER = "BouncyWall";
+    private const string STICKYWALLLAYER = "StickyWall";
+    private const string DESTROYWALLLAYER = "DestroyBorder";
     private const string BALLLAYER = "Ball";
 
     [SerializeField] private BubbleCheckpoint[] checkpoints;
@@ -48,12 +50,14 @@ public class Bubble: MonoBehaviour
     }
 
     /// <summary>
-    /// Отражение пузырька при попадании в стену
+    /// Отражение пузырька при попадании в стену (в том числе и в верхнюю, так надо по тз). 
+    /// При этом пузыри - НЕ СНАРЯДЫ к той же стенке всё равно прилипают
     /// </summary>
     /// <param name="collision">Коллайдер, с которым столкнулись</param>
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.layer == LayerMask.NameToLayer(BOUNCYWALLLAYER))
+        if (collision.gameObject.layer == LayerMask.NameToLayer(BOUNCYWALLLAYER) ||
+            collision.gameObject.layer == LayerMask.NameToLayer(STICKYWALLLAYER))
         {
             direction = Vector2.Reflect(direction, collision.GetContact(0).normal);
             if (rigidbody == null)
@@ -63,6 +67,10 @@ public class Bubble: MonoBehaviour
             rigidbody.velocity = Vector2.zero;
             rigidbody.angularVelocity = 0;
             rigidbody.AddForce(direction * speed, ForceMode2D.Force);
+        }
+        if(collision.gameObject.layer == LayerMask.NameToLayer(DESTROYWALLLAYER))
+        {
+            Destroy(gameObject);
         }
     }
 
