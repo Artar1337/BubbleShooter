@@ -45,7 +45,7 @@ public class BubbleGraph : MonoBehaviour
     /// <summary>
     /// Максимальное число пузырей в нечетной строке (четные высчитываются как данное число - 1)
     /// </summary>
-    [Range(2, 100)] [SerializeField] private int oddGraphLength = 11;
+    [Range(2, 11)] [SerializeField] private int oddGraphLength = 11;
 
     [SerializeField] private float horizontalBubbleGap = 0.5f;
     [SerializeField] private float verticalBubbleGap = 0.425f;
@@ -74,7 +74,7 @@ public class BubbleGraph : MonoBehaviour
         PhysicsIgnoreInitialize();
         bubbles = new List<Bubble>();
         countLeftToGenerate = maxGraphDepth - initialGraphDepth;
-        RandomizeLevel();
+        InitializeLevel(LevelManager.instance.GetCurrentLevel());
         InvokeRepeating(nameof(ForceUpdateAllListeners), forceUpdateTimer, forceUpdateTimer);
     }
 
@@ -91,7 +91,7 @@ public class BubbleGraph : MonoBehaviour
     /// <summary>
     /// Спавнит одну линию пузырьков сверху остальных
     /// </summary>
-    private void RandomizeOneLine()
+    private void GenerateOneLineAbove()
     {
         if (countLeftToGenerate <= 0)
         {
@@ -103,59 +103,73 @@ public class BubbleGraph : MonoBehaviour
         transform.position -= new Vector3(0, verticalBubbleGap, 0);
         if (isNextLineOdd)
         {
-            GenerateOddline(-generatedLines);
+            GenerateOddline(-generatedLines, null);
         }
         else
         {
-            GenerateEvenLine(-generatedLines);
+            GenerateEvenLine(-generatedLines, null);
         }
         isNextLineOdd = !isNextLineOdd;
     }
 
     /// <summary>
-    /// Рандомизирует первые initialGraphDepth линий пузырьков
+    /// Инициализирует первые initialGraphDepth линий пузырьков (последние для файла)
     /// </summary>
-    private void RandomizeLevel()
+    private void InitializeLevel(string level)
     {
+        string[] lines = level.Split(System.Environment.NewLine);
+
         for (int i = 0; i < initialGraphDepth; i++)
         {
             if ((i & 0x1) == 0x0)
             {
-                GenerateOddline(i);
+                GenerateOddline(i, lines[lines.Length - 2 - initialGraphDepth + i]);
                 continue;
             }
-            GenerateEvenLine(i);
+            GenerateEvenLine(i, lines[lines.Length - 2 - initialGraphDepth + i]);
         }
     }
 
     /// <summary>
-    /// Рандомизирует нечетную линию (максимальное кол-во пузырьков)
+    /// Создает нечетную линию (максимальное кол-во пузырьков)
     /// </summary>
     /// <param name="yIndex">Номер линии</param>
-    private void GenerateOddline(int yIndex)
+    /// <param name="lineInfo">Информация о строке</param>
+    private void GenerateOddline(int yIndex, string lineInfo)
     {
         for (int j = 0; j < oddGraphLength; j++)
         {
             Bubble bubble = Instantiate(bubblePrefab, transform.position +
                 new Vector3(horizontalBubbleGap * j, -verticalBubbleGap * yIndex, 0f),
                 Quaternion.identity, transform).GetComponent<Bubble>();
-            bubble.Initialize(false, Vector2.zero);
+            bubble.Initialize(false, Vector2.zero, CharNumberToBubbleColor(lineInfo[j]));
         }
     }
 
     /// <summary>
-    /// Рандомизирует четную линию (максимальное кол-во пузырьков - 1)
+    /// Создает четную линию (максимальное кол-во пузырьков - 1)
     /// </summary>
     /// <param name="yIndex">Номер линии</param>
-    private void GenerateEvenLine(int yIndex)
+    /// /// <param name="lineInfo">Информация о строке</param>
+    private void GenerateEvenLine(int yIndex, string lineInfo)
     {
         for (int j = 0; j < oddGraphLength - 1; j++)
         {
             Bubble bubble = Instantiate(bubblePrefab, transform.position +
                 new Vector3(horizontalBubbleGap / 2 + horizontalBubbleGap * j, -verticalBubbleGap * yIndex, 0f),
                 Quaternion.identity, transform).GetComponent<Bubble>();
-            bubble.Initialize(false, Vector2.zero);
+            bubble.Initialize(false, Vector2.zero, CharNumberToBubbleColor(lineInfo[j]));
         }
+    }
+
+    /// <summary>
+    /// Конвертирует char в BubbleColor с учетом того, что отсчет начинаем с символа '0'
+    /// </summary>
+    /// <param name="ch">Входной символ</param>
+    /// <returns>Выходной цвет</returns>
+    private BubbleColor CharNumberToBubbleColor(char ch)
+    {
+        return (BubbleColor)(ch - '0');
     }
     
     /// <summary>
@@ -232,6 +246,10 @@ public class BubbleGraph : MonoBehaviour
         bubbles.Add(bubble);
     }
 
+    /// <summary>
+    /// Возврат следующего уникального ID шарика
+    /// </summary>
+    /// <returns>ID пузыря</returns>
     public int GetNextId()
     {
         return currentId++;

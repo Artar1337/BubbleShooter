@@ -43,6 +43,7 @@ public class MainMenuController : MonoBehaviour
     /// </summary>
     public void LoadRandomLevel()
     {
+        LevelManager.instance.SetCurrentLevel();
         LoadGame();
     }
 
@@ -70,6 +71,7 @@ public class MainMenuController : MonoBehaviour
     /// <param name="index">Индекс уровня</param>
     public void LoadLevelByIndex(int index)
     {
+        LevelManager.instance.SetCurrentLevel(index);
         LoadGame();
     }
 
