@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
@@ -16,12 +17,14 @@ public class CannonController : MonoBehaviour
     [SerializeField] private Image currentBall;
     [SerializeField] private Image nextBall;
     [SerializeField] private LayerMask ignoreLayers;
+    [SerializeField] private float cannonCooldown = 1f;
 
     private bool cannonIsMoving = false;
     private LineRenderer lineRenderer;
     private BubbleColor currentColor;
     private BubbleColor nextColor;
     private int shotCount = 0;
+    private bool canShootNow = true;
 
     private void Start()
     {
@@ -31,12 +34,19 @@ public class CannonController : MonoBehaviour
         UpdateUI();
     }
 
+    private IEnumerator CannonCooldown()
+    {
+        canShootNow = false;
+        yield return new WaitForSeconds(cannonCooldown);
+        canShootNow = true;
+    }
+
     /// <summary>
     /// Отвечает за INPUT, поворот пушки, выстрел и т.п.
     /// </summary>
     private void Update()
     {
-        if (UiController.IsUserInMenu)
+        if (UiController.IsUserInMenu || !canShootNow)
         {
             return;
         }
@@ -45,7 +55,10 @@ public class CannonController : MonoBehaviour
         if (Input.touchCount > 0)
         {
             Touch touch = Input.GetTouch(0);
-            Debug.Log("Touch Position : " + touch.position);
+            Vector3 diff = mainCam.ScreenToWorldPoint(new Vector3(touch.position.x, touch.position.y)) - transform.position;
+            diff.Normalize();
+            transform.rotation = Quaternion.Euler(0f, 0f,
+                Mathf.Clamp(Mathf.Atan2(diff.y, diff.x) * Mathf.Rad2Deg - DEG90, -degreeBorder, degreeBorder));
             cannonIsMoving = true;
             LineRendererUpdate(false);
             return;
@@ -100,6 +113,7 @@ public class CannonController : MonoBehaviour
         {
             BubbleGraph.instance.StartCoroutine(BubbleGraph.instance.AddOneLine());
         }
+        StartCoroutine(CannonCooldown());
     }
 
     /// <summary>
@@ -124,7 +138,7 @@ public class CannonController : MonoBehaviour
             return;
         }
         newValues[1] = Physics2D.Raycast(bubbleSpawnPoint.position, 
-            transform.rotation * Vector2.up, float.MaxValue).point;
+            transform.rotation * Vector2.up, float.MaxValue, ~ignoreLayers).point;
         lineRenderer.SetPositions(newValues);
     }
 }
