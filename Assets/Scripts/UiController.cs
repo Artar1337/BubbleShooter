@@ -10,6 +10,20 @@ using UnityEngine.EventSystems;
 /// </summary>
 public class UiController : MonoBehaviour
 {
+    #region Singleton
+    public static UiController instance;
+
+    private void Awake()
+    {
+        if (instance != null)
+        {
+            Debug.LogError("Ui controller instance error!");
+            return;
+        }
+        instance = this;
+    }
+    #endregion
+
     private const string MENUSCENE = "Menu";
 
     [SerializeField] private GameObject menuPanel;

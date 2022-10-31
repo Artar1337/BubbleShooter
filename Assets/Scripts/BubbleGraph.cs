@@ -35,10 +35,12 @@ public class BubbleGraph : MonoBehaviour
     #endregion
 
     private const float UPDATERTIMER = 0.5f;
+    private const float LINEADDDELAY = 2f;
     
     private const string CHECKPOINTLAYER = "Checkpoint";
     private const string BALLLAYER = "Ball";
     private const string BOUNCYWALLLAYER = "BouncyWall";
+    private const string LOSEWALLLAYER = "LoseZone";
 
     [SerializeField] private int maxGraphDepth = 15;
     [SerializeField] private int initialGraphDepth = 7;
@@ -62,6 +64,7 @@ public class BubbleGraph : MonoBehaviour
     private bool shouldUpdateBubblesNow = true;
     private List<Bubble> bubbles;
     private int currentId = 0;
+    private string[] lines;
 
     public GameObject BubblePrefab 
     {
@@ -75,7 +78,7 @@ public class BubbleGraph : MonoBehaviour
         bubbles = new List<Bubble>();
         countLeftToGenerate = maxGraphDepth - initialGraphDepth;
         InitializeLevel(LevelManager.instance.GetCurrentLevel());
-        InvokeRepeating(nameof(ForceUpdateAllListeners), forceUpdateTimer, forceUpdateTimer);
+        InvokeRepeating(nameof(ForceUpdateAllListeners), LINEADDDELAY, forceUpdateTimer);
     }
 
     /// <summary>
@@ -89,6 +92,15 @@ public class BubbleGraph : MonoBehaviour
     }
 
     /// <summary>
+    /// Сдвигает пузырьки вниз через LINEADDDELAY секунд
+    /// </summary>
+    public IEnumerator AddOneLine()
+    {
+        yield return new WaitForSeconds(LINEADDDELAY);
+        GenerateOneLineAbove();
+    }
+
+    /// <summary>
     /// Спавнит одну линию пузырьков сверху остальных
     /// </summary>
     private void GenerateOneLineAbove()
@@ -99,16 +111,15 @@ public class BubbleGraph : MonoBehaviour
         }
         countLeftToGenerate--;
         generatedLines++;
-        // Сдвигаем сначала вниз все пузыри, потом уже билдим сверху
-        transform.position -= new Vector3(0, verticalBubbleGap, 0);
         if (isNextLineOdd)
         {
-            GenerateOddline(-generatedLines, null);
+            GenerateOddline(-generatedLines, lines[countLeftToGenerate]);
         }
         else
         {
-            GenerateEvenLine(-generatedLines, null);
+            GenerateEvenLine(-generatedLines, lines[countLeftToGenerate]);
         }
+        transform.position -= new Vector3(0, verticalBubbleGap, 0);
         isNextLineOdd = !isNextLineOdd;
     }
 
@@ -117,8 +128,7 @@ public class BubbleGraph : MonoBehaviour
     /// </summary>
     private void InitializeLevel(string level)
     {
-        string[] lines = level.Split(System.Environment.NewLine);
-
+        lines = level.Split(System.Environment.NewLine);
         for (int i = 0; i < initialGraphDepth; i++)
         {
             if ((i & 0x1) == 0x0)
@@ -128,6 +138,7 @@ public class BubbleGraph : MonoBehaviour
             }
             GenerateEvenLine(i, lines[lines.Length - 2 - initialGraphDepth + i]);
         }
+        isNextLineOdd = false;
     }
 
     /// <summary>
@@ -180,6 +191,7 @@ public class BubbleGraph : MonoBehaviour
         Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer(CHECKPOINTLAYER), LayerMask.NameToLayer(BALLLAYER));
         Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer(BALLLAYER), LayerMask.NameToLayer(BALLLAYER));
         Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer(CHECKPOINTLAYER), LayerMask.NameToLayer(BOUNCYWALLLAYER));
+        Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer(LOSEWALLLAYER), LayerMask.NameToLayer(BALLLAYER));
     }
 
     /// <summary>
@@ -223,16 +235,22 @@ public class BubbleGraph : MonoBehaviour
     /// </summary>
     private void ForceUpdateAllListeners()
     {
+        bool gotSomeBallsOnScreen = false;
         foreach (Bubble b in bubbles)
         {
             if (b == null)
             {
                 continue;
             }
+            gotSomeBallsOnScreen = true;
             if(b.gameObject.layer != LayerMask.NameToLayer(BALLLAYER))
             {
                 b.ForceGetSomeNeighbors();
             }
+        }
+        if (!gotSomeBallsOnScreen)
+        {
+            UiController.instance.SummonGameOverScreen(true);
         }
     }
 

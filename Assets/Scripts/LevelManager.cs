@@ -30,10 +30,6 @@ public class LevelManager : MonoBehaviour
             Debug.LogError(e.Message);
         }
         DontDestroyOnLoad(gameObject);
-        foreach(var e in levels)
-        {
-            Debug.LogWarning(e.Key + "\r\n" + e.Value);
-        }
     }
     #endregion
 

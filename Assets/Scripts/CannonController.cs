@@ -21,6 +21,7 @@ public class CannonController : MonoBehaviour
     private LineRenderer lineRenderer;
     private BubbleColor currentColor;
     private BubbleColor nextColor;
+    private int shotCount = 0;
 
     private void Start()
     {
@@ -94,6 +95,11 @@ public class CannonController : MonoBehaviour
         Bubble bubble = Instantiate(BubbleGraph.instance.BubblePrefab, bubbleSpawnPoint.position, Quaternion.identity, bubbleSpawnRoot).
             GetComponent<Bubble>();
         bubble.Initialize(true, transform.rotation * Vector2.up, currentColor);
+        shotCount++;
+        if((shotCount & 0x1) == 0x0)
+        {
+            BubbleGraph.instance.StartCoroutine(BubbleGraph.instance.AddOneLine());
+        }
     }
 
     /// <summary>

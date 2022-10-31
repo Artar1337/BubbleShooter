@@ -13,6 +13,7 @@ public class Bubble: MonoBehaviour
     private const string BOUNCYWALLLAYER = "BouncyWall";
     private const string STICKYWALLLAYER = "StickyWall";
     private const string DESTROYWALLLAYER = "DestroyBorder";
+    private const string LOSEWALLLAYER = "LoseZone";
     private const string BALLLAYER = "Ball";
 
     [SerializeField] private BubbleCheckpoint[] checkpoints;
@@ -94,6 +95,11 @@ public class Bubble: MonoBehaviour
         }
 
         hadSomeCollisions = true;
+        if(collision.gameObject.layer == LayerMask.NameToLayer(LOSEWALLLAYER))
+        {
+            StickmanController.instance.MakeStickmanSad();
+            UiController.instance.SummonGameOverScreen(false);
+        }
         if(collision.gameObject.layer != gameObject.layer)
         {
             return;
