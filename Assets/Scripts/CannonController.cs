@@ -37,6 +37,10 @@ public class CannonController : MonoBehaviour
     /// </summary>
     private void Update()
     {
+        if (UiController.IsUserInMenu)
+        {
+            return;
+        }
         // Для Android
         // TODO: весь код для anroid input
         if (Input.touchCount > 0)
@@ -63,12 +67,15 @@ public class CannonController : MonoBehaviour
         if (cannonIsMoving)
         {
             cannonIsMoving = false;
-            Shoot();
+            if (!UiController.IsPointerOverUIObject())
+            {
+                Shoot();
+                currentColor = nextColor;
+                nextColor = GenerateColor();
+                UpdateUI();
+            }
             transform.rotation = Quaternion.identity;
-            currentColor = nextColor;
-            nextColor = GenerateColor();
             LineRendererUpdate();
-            UpdateUI();
         }
     }
 
