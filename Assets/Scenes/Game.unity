@@ -2729,6 +2729,7 @@ MonoBehaviour:
   ignoreLayers:
     serializedVersion: 2
     m_Bits: 802820
+  cannonCooldown: 1
 --- !u!120 &1365719229
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -2899,7 +2900,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0fd501a40abbf34b938efdfe481ee0e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  overlaps: 0
 --- !u!1 &1446493643
 GameObject:
   m_ObjectHideFlags: 0

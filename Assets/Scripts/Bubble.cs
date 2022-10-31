@@ -21,11 +21,9 @@ public class Bubble: MonoBehaviour
 
     private BubbleColor bubbleColor;
     private new CircleCollider2D collider;
-    private float defaultRadius;
     private bool hadSomeCollisions = false;
     private Vector2 direction;
     private new Rigidbody2D rigidbody;
-    private int id;
 
     /// <summary>
     /// Нормализованный цвет (начинается с нуля)
@@ -44,9 +42,7 @@ public class Bubble: MonoBehaviour
     private void Awake()
     {
         collider = GetComponent<CircleCollider2D>();
-        defaultRadius = collider.radius;
         rigidbody = GetComponent<Rigidbody2D>();
-        id = BubbleGraph.instance.GetNextId();
     }
 
     /// <summary>

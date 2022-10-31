@@ -16,7 +16,7 @@ public enum BubbleColor
 }
 
 /// <summary>
-/// Используется для визуального построения графа из пузырей
+/// Используется для визуального построения графа из пузырей и обновления состояния пузырей
 /// </summary>
 public class BubbleGraph : MonoBehaviour
 {
@@ -262,14 +262,5 @@ public class BubbleGraph : MonoBehaviour
     {
         bubble.GetComponent<SpriteRenderer>().color = bubbleColors[bubble.Color];
         bubbles.Add(bubble);
-    }
-
-    /// <summary>
-    /// Возврат следующего уникального ID шарика
-    /// </summary>
-    /// <returns>ID пузыря</returns>
-    public int GetNextId()
-    {
-        return currentId++;
     }
 }

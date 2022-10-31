@@ -34,6 +34,9 @@ public class CannonController : MonoBehaviour
         UpdateUI();
     }
 
+    /// <summary>
+    /// Используется для временной невозможности управления пушкой
+    /// </summary>
     private IEnumerator CannonCooldown()
     {
         canShootNow = false;
@@ -51,7 +54,6 @@ public class CannonController : MonoBehaviour
             return;
         }
         // Для Android
-        // TODO: весь код для anroid input
         if (Input.touchCount > 0)
         {
             Touch touch = Input.GetTouch(0);
