@@ -9,10 +9,7 @@ using UnityEngine.UI;
 public class CannonController : MonoBehaviour
 {
     private const string MOUSEAXIS = "Fire1";
-    private const string BOUNCYWALLLAYER = "BouncyWall";
-    private const string STICKYWALLLAYER = "StickyWall";
     private const float DEG90 = 90f;
-    private const int MAXRECURSIONSTEP = 4;
 
     [SerializeField] private Camera mainCam;
     [SerializeField] private float degreeBorder = 60f;
@@ -104,57 +101,19 @@ public class CannonController : MonoBehaviour
     }
 
     /// <summary>
-    /// Обновление визуального положения линии-траектории
+    /// Обновление визуального положения линии-траектории (работает как лазерная указка)
     /// </summary>
     private void LineRendererUpdate(bool setDefaults = true)
     {
-        Vector3[] newValues = new Vector3[] {
-            lineRenderer.GetPosition(0),
-            bubbleSpawnPoint.position,
-            bubbleSpawnPoint.position,
-            bubbleSpawnPoint.position,
-            bubbleSpawnPoint.position
-        };
-
+        Vector2 spawnPoint = bubbleSpawnPoint.position;
+        Vector3[] newValues = new Vector3[] { spawnPoint, spawnPoint };
         if (setDefaults)
         {
             lineRenderer.SetPositions(newValues);
             return;
         }
-        RaycastHit2D hit = Physics2D.Raycast(bubbleSpawnPoint.position, bubbleSpawnPoint.up, 
-            float.MaxValue);
-        newValues = ReflectRay(hit, bubbleSpawnPoint.up, newValues);
+        newValues[1] = Physics2D.Raycast(bubbleSpawnPoint.position, 
+            transform.rotation * Vector2.up, float.MaxValue).point;
         lineRenderer.SetPositions(newValues);
-    }
-
-    /// <summary>
-    /// Подсчет траектории выстрела после n-ного рикошета
-    /// </summary>
-    /// <param name="hit">Объект, которого пузырь коснется последним</param>
-    /// <param name="direction">Направление полёта пузыря</param>
-    /// <param name="poins">Точки соприкосновения</param>
-    /// <param name="recursionStep">Текущий шаг рекурсии</param>
-    /// <returns>true, если пуля попадёт по игроку (иначе false)</returns>
-    private Vector3[] ReflectRay(RaycastHit2D hit, Vector2 direction, Vector3[] points, int recursionStep = 1)
-    {
-        if (hit.collider == null || recursionStep > MAXRECURSIONSTEP)
-        {
-            return points;
-        }
-        // Выстрел по препятствию - отражение луча
-        if (hit.collider.gameObject.layer == LayerMask.NameToLayer(STICKYWALLLAYER) ||
-            hit.collider.gameObject.layer == LayerMask.NameToLayer(BOUNCYWALLLAYER))
-        {
-            points[recursionStep] = hit.point;
-            direction = Vector2.Reflect(direction, hit.normal);
-            hit = Physics2D.Raycast(hit.point, direction, float.MaxValue);
-            return ReflectRay(hit, direction, points, recursionStep + 1);
-        }
-        // Выстрел по любому шару/границе уничтожения - можно дальше не отражать
-        for(int i = recursionStep; i < MAXRECURSIONSTEP; i++)
-        {
-            points[recursionStep] = hit.point;
-        }
-        return points;
     }
 }
