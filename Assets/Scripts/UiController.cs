@@ -5,6 +5,9 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
 
+/// <summary>
+/// Контроллер UI внутри игры
+/// </summary>
 public class UiController : MonoBehaviour
 {
     private const string MENUSCENE = "Menu";
